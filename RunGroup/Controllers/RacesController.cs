@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RunGroup.Data;
 using RunGroup.Interfaces;
 using RunGroup.Models;
+using RunGroup.Repository;
 
 namespace RunGroup.Controllers
 {
@@ -23,6 +24,22 @@ namespace RunGroup.Controllers
         {
             Races race = await _racerepository.GetByIdAsync(id);
             return View(race);
+        }
+
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Races race)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(race);
+            }
+            _racerepository.Add(race);
+            return RedirectToAction("Index");
         }
     }
 }
