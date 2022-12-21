@@ -1,26 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RunGroup.Data;
+using RunGroup.Interfaces;
 using RunGroup.Models;
 
 namespace RunGroup.Controllers
 {
     public class RacesController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        public RacesController(ApplicationDbContext context)
+        private readonly IRaceRepository _racerepository;
+        public RacesController(IRaceRepository racerepository)
         {
-            _context= context;
+            _racerepository= racerepository;
         }
-        public IActionResult Index()
+        public async  Task<IActionResult> Index()
         {
-            List<Races> races = _context.Races.ToList();
+            IEnumerable<Races> races = await _racerepository.GetAll();
             return View(races);
         }
 
-        public IActionResult Detail(int id)
+        public async  Task<IActionResult> Detail(int id)
         {
-            Races race = _context.Races.Include(a => a.Address).FirstOrDefault(c => c.Id == id);
+            Races race = await _racerepository.GetByIdAsync(id);
             return View(race);
         }
     }
