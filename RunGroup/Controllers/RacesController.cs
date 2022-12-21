@@ -4,15 +4,19 @@ using RunGroup.Data;
 using RunGroup.Interfaces;
 using RunGroup.Models;
 using RunGroup.Repository;
+using RunGroup.Services;
+using RunGroup.ViewModels;
 
 namespace RunGroup.Controllers
 {
     public class RacesController : Controller
     {
         private readonly IRaceRepository _racerepository;
-        public RacesController(IRaceRepository racerepository)
+        private readonly IPhotoService _photoService;
+        public RacesController(IRaceRepository racerepository, IPhotoService photoService)
         {
             _racerepository= racerepository;
+            _photoService= photoService;
         }
         public async  Task<IActionResult> Index()
         {
@@ -32,14 +36,31 @@ namespace RunGroup.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Races race)
+        public async Task<IActionResult> Create(CreateRacesViewModel raceVM)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                return View(race);
+                var result = await _photoService.AddPhotoAsync(raceVM.Image);
+                var race = new Races
+                {
+                    Title = raceVM.Title,
+                    Description = raceVM.Description,
+                    Image = result.Url.ToString(),
+                    Address = new Address
+                    {
+                        Street = raceVM.Address.Street,
+                        City = raceVM.Address.City,
+                        State = raceVM.Address.State,
+                    }
+                };
+                _racerepository.Add(race);
+                return RedirectToAction("Index");
             }
-            _racerepository.Add(race);
-            return RedirectToAction("Index");
+            else
+            {
+                ModelState.AddModelError("", "Photo upload failed");
+            }
+            return View(raceVM);
         }
     }
 }
