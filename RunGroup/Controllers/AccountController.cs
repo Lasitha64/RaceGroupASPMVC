@@ -52,5 +52,43 @@ namespace RunGroup.Controllers
             TempData["Error"] = "Wrong credentials. Please Try again";
             return View(login);
         }
+
+        public IActionResult Register()
+        {
+            var response = new RegisterViewModel();
+            return View(response);
+        }
+
+        [HttpPost] 
+        public async Task<IActionResult> Register(RegisterViewModel register)
+        {
+            if (!ModelState.IsValid) return View(register);
+
+            var user = await _userManager.FindByEmailAsync(register.EmailAddress);
+            if (user != null)
+            {
+                TempData["Error"] = "This email address is already in use";
+                return View(register);
+            }
+
+            var newUser = new AppUser()
+            {
+                Email = register.EmailAddress,
+                UserName = register.EmailAddress,
+            };
+
+            var newUserResponce = await _userManager.CreateAsync(newUser, register.Password);
+            if (newUserResponce.Succeeded) 
+                await _userManager.AddToRoleAsync(newUser, UserRoles.User);
+                
+            return RedirectToAction("Index","Races");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index","Races");
+        }
     }
 }
