@@ -62,5 +62,64 @@ namespace RunGroup.Controllers
             }
             return View(raceVM);
         }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var race = await _racerepository.GetByIdAsync(id);
+            if (race == null) return View("Error");
+            var raceVM = new EditRaceViewModel
+            {
+                Title = race.Title,
+                Description = race.Description,
+                AddressId = race.AddressId,
+                Address = race.Address,
+                URL = race.Image,
+                RaceCategory = race.RaceCategory,
+            };
+
+            return View(raceVM);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, EditRaceViewModel raceVM)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Failed to edit club");
+                return View("Edit", raceVM);
+            }
+            var raceClub = await _racerepository.GetByIdAsyncNoTracking(id);
+
+            if (raceClub != null)
+            {
+                try
+                {
+                    await _photoService.DeletePhotoAsync(raceClub.Image);
+                }
+                catch (Exception)
+                {
+
+                    ModelState.AddModelError("", "Could not delete photo");
+                    return View(raceVM);
+                }
+                var photoResult = await _photoService.AddPhotoAsync(raceVM.Image);
+
+                var race = new Races
+                {
+                    Id = id,
+                    Title = raceVM.Title,
+                    Description = raceVM.Description,
+                    Image = photoResult.Url.ToString(),
+                    AddressId = raceVM.AddressId,
+                    Address = raceVM.Address,
+                };
+                _racerepository.Update(race);
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                return View(raceVM);
+            }
+        }
     }
 }

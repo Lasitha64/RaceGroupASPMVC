@@ -10,11 +10,11 @@ namespace RunGroup.Controllers
 {
     public class ClubController : Controller
     {
-       
+
         private readonly IClubRepository _clubRepository;
         private readonly IPhotoService _photoService;
 
-        public ClubController( IClubRepository clubRepository, IPhotoService photoService)
+        public ClubController(IClubRepository clubRepository, IPhotoService photoService)
         {
             _clubRepository = clubRepository;
             _photoService = photoService;
@@ -51,7 +51,7 @@ namespace RunGroup.Controllers
                     {
                         Street = clubVM.Address.Street,
                         City = clubVM.Address.City,
-                        State= clubVM.Address.State,
+                        State = clubVM.Address.State,
                     }
                 };
                 _clubRepository.Add(club);
@@ -62,7 +62,67 @@ namespace RunGroup.Controllers
                 ModelState.AddModelError("", "Photo upload failed");
             }
             return View(clubVM);
-            
+
+        }
+
+      
+        public async Task<IActionResult> Edit(int id)
+        {
+            var club = await _clubRepository.GetByIdAsync(id);
+            if (club == null) return View("Error");
+            var clubVM = new EditClubViewModel
+            {
+                Title = club.Title,
+                Description = club.Description,
+                AddressId = club.AddressId,
+                Address = club.Address,
+                URL = club.Image,
+                ClubCategory = club.ClubCategory,
+            };
+
+            return View(clubVM);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, EditClubViewModel clubVM)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Failed to edit club");
+                return View("Edit", clubVM);
+            }
+            var userClub = await _clubRepository.GetByIdAsyncNoTracking(id);
+
+            if (userClub != null)
+            {
+                try
+                {
+                    await _photoService.DeletePhotoAsync(userClub.Image);
+                }
+                catch (Exception)
+                {
+
+                    ModelState.AddModelError("", "Could not delete photo");
+                    return View(clubVM);
+                }
+                var photoResult = await _photoService.AddPhotoAsync(clubVM.Image);
+
+                var club = new Club
+                {
+                    Id = id,
+                    Title = clubVM.Title,
+                    Description = clubVM.Description,
+                    Image = photoResult.Url.ToString(),
+                    AddressId = clubVM.AddressId,
+                    Address = clubVM.Address,
+                };
+                _clubRepository.Update(club);
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                return View(clubVM);
+            }
         }
     }
 }
