@@ -4,7 +4,6 @@ using RunGroup.Data;
 using RunGroup.Interfaces;
 using RunGroup.Models;
 using RunGroup.Repository;
-using RunGroup.Services;
 using RunGroup.ViewModels;
 
 namespace RunGroup.Controllers
@@ -13,10 +12,12 @@ namespace RunGroup.Controllers
     {
         private readonly IRaceRepository _racerepository;
         private readonly IPhotoService _photoService;
-        public RacesController(IRaceRepository racerepository, IPhotoService photoService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public RacesController(IRaceRepository racerepository, IPhotoService photoService, IHttpContextAccessor httpContextAccessor)
         {
-            _racerepository= racerepository;
-            _photoService= photoService;
+            _racerepository = racerepository;
+            _photoService = photoService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async  Task<IActionResult> Index()
         {
@@ -32,7 +33,9 @@ namespace RunGroup.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            var curUser = _httpContextAccessor.HttpContext.User.GetUserId();
+            var createRacesViewModel = new CreateRacesViewModel { AppUserId = curUser };
+            return View(createRacesViewModel);
         }
 
         [HttpPost]
@@ -45,6 +48,7 @@ namespace RunGroup.Controllers
                 {
                     Title = raceVM.Title,
                     Description = raceVM.Description,
+                    AppUserId = raceVM.AppUserId,
                     Image = result.Url.ToString(),
                     Address = new Address
                     {

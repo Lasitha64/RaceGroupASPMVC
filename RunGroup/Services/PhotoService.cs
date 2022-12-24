@@ -2,6 +2,7 @@
 using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Options;
 using RunGroup.Helpers;
+using RunGroup.Interfaces;
 
 namespace RunGroup.Services
 {

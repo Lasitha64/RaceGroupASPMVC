@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using RunGroup.Data;
 using RunGroup.Interfaces;
 using RunGroup.Models;
-using RunGroup.Services;
 using RunGroup.ViewModels;
 
 namespace RunGroup.Controllers
@@ -13,11 +12,13 @@ namespace RunGroup.Controllers
 
         private readonly IClubRepository _clubRepository;
         private readonly IPhotoService _photoService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ClubController(IClubRepository clubRepository, IPhotoService photoService)
+        public ClubController(IClubRepository clubRepository, IPhotoService photoService, IHttpContextAccessor httpContextAccessor)
         {
             _clubRepository = clubRepository;
             _photoService = photoService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<IActionResult> Index()
         {
@@ -33,7 +34,9 @@ namespace RunGroup.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            var curUser = _httpContextAccessor.HttpContext.User.GetUserId();
+            var createClubViewModel = new CreateClubViewModel { AppUserId = curUser };
+            return View(createClubViewModel);
         }
 
         [HttpPost]
@@ -47,6 +50,7 @@ namespace RunGroup.Controllers
                     Title = clubVM.Title,
                     Description = clubVM.Description,
                     Image = result.Url.ToString(),
+                    AppUserId = clubVM.AppUserId,
                     Address = new Address
                     {
                         Street = clubVM.Address.Street,

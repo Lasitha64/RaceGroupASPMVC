@@ -13,9 +13,10 @@ namespace RunGroup.Controllers
         private readonly ApplicationDbContext _context;
         public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ApplicationDbContext context)
         {
+            _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
-            _context = context;
+            
         }
 
         public IActionResult Login()

@@ -1,6 +1,6 @@
 ﻿using CloudinaryDotNet.Actions;
 
-namespace RunGroup.Services
+namespace RunGroup.Interfaces
 {
     public interface IPhotoService
     {
